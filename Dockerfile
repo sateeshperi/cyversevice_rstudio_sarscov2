@@ -1,4 +1,4 @@
-FROM cyversevice/rstudio-base:latest
+FROM cyversevice/rstudio-verse:4.0.0-ubuntu18.04
 
 USER root 
 
@@ -16,10 +16,10 @@ RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 RUN wget \
     https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && mkdir /root/.conda \
-    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && bash Miniconda3-latest-Linux-x86_64.sh -p /opt/conda -b \
     && rm -f Miniconda3-latest-Linux-x86_64.sh 
-RUN conda --version
+ENV PATH=/opt/conda/bin:${PATH}
+RUN conda update -y conda
 
 # install conda packages
 COPY ./environment.yml /usr/local/src
@@ -106,6 +106,10 @@ RUN bash -c "python3 -m pip install -r ./pangolin/requirements.txt"
 RUN bash -c "cd ./pangolin/build/pangolin && python setup.py install"
 
 # Rstudio
+# Add gomplate
+ADD https://github.com/hairyhenderson/gomplate/releases/download/v3.9.0/gomplate_linux-amd64 /usr/bin/gomplate
+RUN chmod a+x /usr/bin/gomplate
+
 # provide read and write access to Rstudio users for default R library location
 RUN chmod -R 777 /usr/local/lib/R/site-library
 
@@ -133,10 +137,10 @@ RUN if [ -x /usr/bin/apt ]; then \
 
 RUN echo "$LOCAL_USER ALL=NOPASSWD: $PRIV_CMDS" >> /etc/sudoers
 
-USER rstudio
 RUN echo 'export PS1="[\u@cyverse] \w $ "' >> /home/rstudio/.bash_profile
-USER root
+
+USER rstudio
 
 ENTRYPOINT ["/usr/local/bin/run.sh"]
 
-WORKDIR /data/work/
+WORKDIR /data
