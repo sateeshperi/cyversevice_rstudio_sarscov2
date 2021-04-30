@@ -145,4 +145,4 @@ USER rstudio
 
 ENTRYPOINT ["/usr/local/bin/run.sh"]
 
-WORKDIR /data
+WORKDIR /home/rstudio
