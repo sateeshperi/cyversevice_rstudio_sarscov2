@@ -8,8 +8,6 @@ ENV TERM=xterm
 ENV DEBIAN_FRONTEND=noninteractive
 
 # install conda
-ENV PATH="/root/miniconda3/bin:${PATH}"
-ARG PATH="/root/miniconda3/bin:${PATH}"
 RUN apt-get update
 
 RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
@@ -138,6 +136,10 @@ RUN if [ -x /usr/bin/apt ]; then \
 RUN echo "$LOCAL_USER ALL=NOPASSWD: $PRIV_CMDS" >> /etc/sudoers
 
 RUN echo 'export PS1="[\u@cyverse] \w $ "' >> /home/rstudio/.bash_profile
+
+# install R-packages
+RUN /usr/local/bin/Rscript -e "install.packages('tidyverse')"
+RUN /usr/local/bin/Rscript -e "install.packages('openxlsx')"
 
 USER rstudio
 

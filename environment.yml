@@ -11,6 +11,7 @@ dependencies:
   - bwa
   - primerclip
   - trimmomatic
+  - nextclade_js
   - nextclade-cli
   - bcftools
   - bedtools
