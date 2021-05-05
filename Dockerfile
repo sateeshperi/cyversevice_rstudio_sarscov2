@@ -2,6 +2,22 @@ FROM cyversevice/rstudio-verse:4.0.0-ubuntu18.04
 
 USER root 
 
+# Build-time metadata as defined at http://label-schema.org
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="RStudio SarsCov2" \
+      org.label-schema.description="Built from Rocker-Project RStudio Verse, additional depends for CyVerse K8s workbench" \
+      org.label-schema.url="https://cyverse.org" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/sateeshperi/cyversevice_rstudio_sarscov2" \
+      org.label-schema.vendor="CyVerse" \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0.0"
+
+LABEL maintainer="Sateesh Peri sateeshp@email.arizona.edu"
+
 WORKDIR /usr/local/src
 ENV PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV TERM=xterm
@@ -9,7 +25,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install conda
 RUN apt-get update
-
 RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 RUN wget \
@@ -39,12 +54,11 @@ COPY "./src_files/dot_config/*" "./dot_config/"
 COPY "./src_files/dot_config/tz_seed.txt" "/debconf_preseed.txt"
 COPY "./src_files/pangolin/requirements.txt" "./pangolin/"
 COPY "./src_files/entry.sh" "/bin"
-COPY "./src_files/.bashrc" "${HOME}/.bashrc"
+COPY "./src_files/.bashrc" "/home/rstudio/.bashrc"
+COPY "./src_files/profile" "/home/rstudio/.profile"
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN debconf-set-selections /debconf_preseed.txt
-
-# install 
 
 # Preinstall packages
 RUN apt-get update && apt-get install -y \
@@ -135,14 +149,13 @@ RUN if [ -x /usr/bin/apt ]; then \
 
 RUN echo "$LOCAL_USER ALL=NOPASSWD: $PRIV_CMDS" >> /etc/sudoers
 
-RUN echo 'export PS1="[\u@cyverse] \w $ "' >> /home/rstudio/.bash_profile
-
 # install R-packages
 RUN /usr/local/bin/Rscript -e "install.packages('tidyverse')"
 RUN /usr/local/bin/Rscript -e "install.packages('openxlsx')"
 
 USER rstudio
 
+ENTRYPOINT ["bash", "/bin/entry.sh"]
 ENTRYPOINT ["/usr/local/bin/run.sh"]
 
 WORKDIR /home/rstudio
